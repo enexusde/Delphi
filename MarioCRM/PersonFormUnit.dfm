@@ -1,6 +1,6 @@
 object PersonForm: TPersonForm
-  Left = 1115
-  Top = 246
+  Left = 642
+  Top = 234
   Width = 465
   Height = 333
   Caption = 'Person'

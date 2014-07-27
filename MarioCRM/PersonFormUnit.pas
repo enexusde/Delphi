@@ -44,17 +44,20 @@ uses StrUtils;
 
 procedure TPersonForm.FormShow(Sender: TObject);
 var i:integer;
+    t:TTitle;
 begin
   ComboBox1.Clear;
-  if pid=0 then
+  if pid = 0 then
     BitBtn1.Caption := 'Hinzufügen'
   else
     BitBtn1.Caption := 'Speichern';
 
 
-  for i := 0 to data.countTitle() do
+  ComboBox1.Clear;
+  for i := 1 to data.countTitle() do
   begin
-    ComboBox1.Items.Add(data.getTitle(i).name);
+    t := data.getTitle(i);
+    combobox1.Items.AddObject(t.name, pointer(t.title));
   end;
 end;
 
@@ -75,16 +78,20 @@ begin
     begin
       if data.countTitle(titleSND) > 0 then
       begin
-        case (MessageDlg('Die Anrede '+combobox1.text+' klinkt wie '+data.getTitle(1, titleSND).name+'. Möchten Sie die Anrede '+data.getTitle(1, titleSND).name+' in ' + combobox1.text + ' ändern anstatt eine neue Hinzuzufügen?',mtWarning,[mbYes, mbNo,mbCancel],0)) of
+        case (MessageDlg('Die Anrede ' + combobox1.text + ' klinkt wie ' + data.getTitle(1, titleSND).name + '. Möchten Sie die Anrede ' + data.getTitle(1, titleSND).name + ' in ' + combobox1.text + ' ändern anstatt eine neue Hinzuzufügen?',mtWarning,[mbYes, mbNo,mbCancel],0)) of
           mrCancel:exit;
           mrYes:exit;
           mrNo:changedTitle:=data.insertTitle(trim(ComboBox1.text));
         end;
+      end
+      else
+      begin
+        changedTitle := data.insertTitle(ComboBox1.Text);
       end;
     end;
     data.insertPerson(0,edit3.Text,edit1.Text,edit2.Text,changedTitle,now());
     ModalResult := mrOk;
-    
+
 
   end;
 end;

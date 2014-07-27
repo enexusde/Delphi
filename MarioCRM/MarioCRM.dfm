@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 509
-  Top = 253
+  Left = 240
+  Top = 192
   Width = 951
   Height = 493
   Caption = 
@@ -783,6 +783,7 @@ object Form1: TForm1
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'S'#8364'PA-Einzug ...'
+    Enabled = False
     TabOrder = 10
     OnClick = SEPAClick
   end

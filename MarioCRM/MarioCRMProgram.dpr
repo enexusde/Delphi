@@ -11,7 +11,8 @@ uses
   PersonInfoForm in 'PersonInfoForm.pas' {PersonInfo},
   DonationAndMembershipForm in 'DonationAndMembershipForm.pas' {DonationAndMembership},
   MemberShipFormUnit in 'MemberShipFormUnit.pas' {MemberShipForm},
-  PersonFormUnit in 'PersonFormUnit.pas' {PersonForm};
+  PersonFormUnit in 'PersonFormUnit.pas' {PersonForm},
+  IBANandBIC in 'IBANandBIC.pas' {IBANandBICForm};
 
 {$R *.res}
 
@@ -27,5 +28,6 @@ begin
   Application.CreateForm(TDonationAndMembership, DonationAndMembership);
   Application.CreateForm(TMemberShipForm, MemberShipForm);
   Application.CreateForm(TPersonForm, PersonForm);
+  Application.CreateForm(TIBANandBICForm, IBANandBICForm);
   Application.Run;
 end.

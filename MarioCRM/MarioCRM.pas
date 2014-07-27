@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, simv, StdCtrls, ComCtrls, Math, newAddress, changewhataddress,
-  Buttons, Spende, PersonInfoForm, DonationAndMembershipForm, PersonFormUnit,findperson;
+  Buttons, Spende, PersonInfoForm, DonationAndMembershipForm, PersonFormUnit,findperson,
+  OleCtrls, SHDocVw;
 
 type
   TForm1 = class(TForm)
@@ -91,7 +92,16 @@ begin
   end;
   if spaetestJahr <>0 then
   StatusBar1.Panels[3].Text := IntToStr(fruehestJahr) + ' - ' + IntToStr(spaetestJahr);
+  if data.countPerson() = 0 then
+  begin
+    Persons.Enabled := false;
+    Persons.Items.Add.SubItems.Add ('Es sind noch keine Personen erfasst. Bitte fügen Sie eine neue Person hinzu.');
+  end;
 
+  if data.countPerson() > 1 then
+  begin
+    SEPA.Enabled := true;
+  end;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
@@ -303,8 +313,15 @@ begin
   with TPersonForm.Create(self) do
   begin
     data := self.data;
-    pid:=0;
-    ShowModal;
+    pid := 0;
+    if ShowModal = mrok then
+    begin
+      Edit1Change(nil);
+      if data.countPerson() > 1 then
+      begin
+        SEPA.Enabled := true;
+      end;
+    end;
   end;
 end;
 
@@ -332,7 +349,9 @@ end;
 
 procedure TForm1.SEPAClick(Sender: TObject);
 var date:String;
-var k: TPerson;
+    datetime:String;
+    k,empf: TPerson;
+    empfDetails: boolean;
     a: TAddress;
     sum: double;
     i,j,m,txs: integer;
@@ -340,32 +359,40 @@ var k: TPerson;
     sd: TSaveDialog;
     ex: TExportentification;
     exp: TExportPersonentification;
-    amountInCent: longint;
+    amountInCent, amountCheck: longint;
     comment: boolean;
     ba: TBankAccount;
+    currFormat :TFormatSettings;
 begin
+  empfDetails := false;
+  currFormat.DecimalSeparator:='.';
+  currFormat.ThousandSeparator:=',';
   comment := false;
   txs := 0;
   sum := 0;
+  amountCheck := 0;
   // OK now we have all the informations we need. Now we need to generate a obfuscated unique id for export
   ex := data.findExportentificationByPK (data.insertExportentification(k.person, now(), generateObfuscator('999')));
 
   DateTimeToString(date, 'yyyy-mm-dd', now());
+  DateTimeToString(datetime, 'yyyy-mm-dd"T"hh:MM:ss', now());
   memo1.Clear;
   memo1.lines.Add   ('<?xml version="1.0" encoding="utf-8" ?>');
   memo1.lines.Add   ('<?valid true?>');
   memo1.lines.Add   ('<?description Export Mario-System?>');
-  memo1.lines.Add   ('<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.002.02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">');
+  memo1.lines.Add   ('<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.002.02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.008.002.02 pain.008.002.02.xsd">');
   memo1.lines.Add   ('  <CstmrDrctDbtInitn>');
   memo1.lines.Add   ('    <GrpHdr>');
   memo1.lines.Add   ('      <MsgId>'+ex.obfuscator+'</MsgId>');
-  memo1.lines.Add   ('      <CreDtTm>'+date+'</CreDtTm>');
+  memo1.lines.Add   ('      <CreDtTm>' + datetime + '</CreDtTm>');
   FillChar(a,sizeof(a),0);
   while (a.address = 0) or ((i = data.countBankAccount2Person()) and (ba2p.person <> k.person)) do
   begin
     with TForm5.Create(self) do begin
       Caption := 'Wer soll das Geld bekommen?';
+      needBankAccount:=true;
       k := data.findPersonByPK(modalShow(data));
+      empf := k;
       for i := 1 to data.countAddress2person(toAddress) do
       begin
         if data.getAddress2person(i, toAddress).main then
@@ -373,31 +400,28 @@ begin
       end;
       for i := 0 to data.countBankAccount2Person() do
       begin
-        ba2p := data.getBankAccount2Person(i);
-        if ba2p.person = k.person then
-           break;
+        if data.getBankAccount2Person(i).person = k.person then
+        begin
+          ba2p := data.getBankAccount2Person(i);
+          break;
+        end;
       end;
       if a.address = 0 then
       begin
-        if MessageDlg('Diese Person hat keine Hauptaddresse, möchten Sie jemand anderes finden?',mtError,[mbYes,mbCancel],0)=mrCancel then
+        if MessageDlg(k.firstname + ' ' + k.lastname + ' hat keine Hauptaddresse, '+#13+#10+'möchten Sie jemand anderes finden?',mtError,[mbYes,mbCancel],0)=mrCancel then
           exit;
       end;
       memo1.lines.Add   ('      <InitgPty><Nm>' + k.firstname + ' ' + k.lastname + '</Nm></InitgPty>');
-      if (i = data.countBankAccount2Person()) and (ba2p.person <> k.person) then
+      if (ba2p.bankAccount2person=0) or ((i = data.countBankAccount2Person()) and (ba2p.person <> k.person)) then
       begin
-        if MessageDlg(k.firstname+' ' + k.lastname+' besitzt leider kein Empfängerkonto. Eine Lastschrift ist nicht möglich!',mtError,[mbYes,mbCancel],0) = mrCancel then
+        if MessageDlg(k.firstname+' ' + k.lastname+' besitzt leider kein Empfängerkonto. '+#13+#10+#13+#10+'Eine Lastschrift ist nicht möglich! '+#13+#10+'SEPA wird abgebrochen. ',mtInformation,[mbAbort],0) = mrAbort then
            exit;
       end;
     end;
   end;
-
-
   ShowMessage('Die Übertragung wird mit der ID ' + ex.obfuscator + ' referenziert, damit nicht zurückverfolgt werden kann um was es sich konkret handelt!');
-
-  
-
-
-  if MessageDlg('Möchten Sie genaue informationen über die Initiatorgesellschaft mitgeben? (empfohlen)',mtConfirmation,[mbYes,mbNo],0)=mryes then
+  empfDetails := MessageDlg('Möchten Sie genaue informationen über die Initiatorgesellschaft mitgeben? (empfohlen)',mtConfirmation,[mbYes,mbNo],0) = mryes;
+  if empfDetails then
   begin
     memo1.lines.Add ('      <InitgPty>');
     memo1.lines.Add ('        <Nm>' + k.firstname+ ' ' + k.lastname + '</Nm>');
@@ -420,21 +444,25 @@ begin
   memo1.lines.Add   ('    <PmtInf>');
   memo1.lines.Add   ('      <PmtInfId>' + InputBox('Interne ID','Bitte eine interne ID eingeben.','ID'+date) + '</PmtInfId>');
   //memo1.lines.Add   ('      <PmtMtd>DD</PmtMtd>');
-  memo1.lines.Add   ('      <BtchBookg>false</BtchBookg>');
-  memo1.lines.Add   ('      <NbOfTxs>0</NbOfTxs>');
-  memo1.lines.Add   ('      <CtrlSum>0</CtrlSum>');
-  //memo1.lines.Add   ('      <PmtTpInf>');
-  //memo1.lines.Add   ('        <SvcLvl><Cd>SEPA</Cd></SvcLvl>');
-  //memo1.lines.Add   ('        <LclInstrm><Cd>CORE</Cd></LclInstrm>');
-  //memo1.lines.Add   ('        <SeqTp>RCUR</SeqTp>');
-  //memo1.lines.Add   ('      </PmtTpInf>');
+  memo1.lines.Add   ('      <PmtMtd>DD</PmtMtd>');
+  memo1.lines.Add   ('      <PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl><LclInstrm><Cd>CORE</Cd></LclInstrm><SeqTp>FRST</SeqTp></PmtTpInf>');
   memo1.lines.Add   ('      <ReqdColltnDt>'+date+'</ReqdColltnDt>');
   memo1.lines.Add   ('      <Cdtr><Nm>' + k.firstname+ ' ' + k.lastname + '</Nm></Cdtr>');
   memo1.lines.Add   ('      <CdtrAcct><Id><IBAN>' + data.findBankAccountByPK(ba2p.bankAccount).iban + '</IBAN></Id></CdtrAcct>');
-  memo1.lines.Add   ('      <CdtrAgt><FinInstnId><BIC>' + data.findBankAccountByPK(ba2p.bankAccount).iban + '</BIC></FinInstnId></CdtrAgt>');
-  memo1.lines.Add   ('      <CdtrSchmeId><Id><PrvtId><Othr><Id>' + ex.obfuscator + '</Id></Othr></PrvtId></Id></CdtrSchmeId>');
-  memo1.lines.Add   ('    </PmtInf>');
-
+  memo1.lines.Add   ('      <CdtrAgt><FinInstnId><BIC>' + data.findBankAccountByPK(ba2p.bankAccount).bic + '</BIC></FinInstnId></CdtrAgt>');
+  memo1.lines.Add   ('      <ChrgBr>SLEV</ChrgBr>');
+  memo1.lines.Add   ('      <CdtrSchmeId>');
+  memo1.lines.Add   ('        <Id>');
+  memo1.lines.Add   ('          <PrvtId>');
+  memo1.lines.Add   ('            <Othr>');
+  memo1.lines.Add   ('              <Id>' + data.findBankAccountByPK(ba2p.bankAccount).iban + '</Id>');
+  memo1.lines.Add   ('              <SchmeNm>');
+  memo1.lines.Add   ('              <Prtry>SEPA</Prtry>');
+  memo1.lines.Add   ('              </SchmeNm>');
+  memo1.lines.Add   ('            </Othr>');
+  memo1.lines.Add   ('          </PrvtId>');
+  memo1.lines.Add   ('        </Id>');
+  memo1.lines.Add   ('      </CdtrSchmeId>');
   for i := 1 to data.countPerson() do
   begin
     k := data.getPerson(i);
@@ -443,12 +471,12 @@ begin
     if k.duplicate <> 0 then
       continue;
 
-    for m := data.countBankAccount2Person() downto 1 do
+    for m := data.countBankAccount2Person() downto 0 do
       if data.getBankAccount2Person(m).person = k.person then
         break;
 
     // skip those who have no bankaccount.
-    if m = 1 then
+    if m = 0 then
       continue;
     ba := data.findBankAccountByPK(data.getBankAccount2Person(m).bankAccount);
 
@@ -514,44 +542,62 @@ begin
 
     if amountInCent > 0 then
     begin
-      memo1.lines.Add ('    <DrctDbtTxInf>');
-      memo1.lines.Add ('      <PmtId>');
-      memo1.lines.Add ('        <EndToEndId>' + ex.obfuscator + '</EndToEndId>');
-      memo1.lines.Add ('      </PmtId>');
-      memo1.lines.Add ('      <InstdAmt Ccy="EUR">'+FormatFloat('0.00', amountincent / 100)+'</InstdAmt>');
-      sum := sum + amountincent/100;
-      memo1.lines.Add ('      <DrctDbtTx>');
-      memo1.lines.Add ('        <MndtId>' + exp.internal + '</MndtId>');
-      memo1.lines.Add ('        <DtOfSgntr>' + date + '</DtOfSgntr>');
-      memo1.lines.Add ('        <AmdmntInd>true</AmdmntInd>');
-      memo1.lines.Add ('      </DrctDbtTx>');
+      if k.person <> empf.person then
+      begin
+        memo1.lines.Add ('    <DrctDbtTxInf>');
+        memo1.lines.Add ('      <PmtId>');
+        memo1.lines.Add ('        <EndToEndId>' + ex.obfuscator + '</EndToEndId>');
+        memo1.lines.Add ('      </PmtId>');
+        memo1.lines.Add ('      <InstdAmt Ccy="EUR">'+FormatFloat('0.00', amountincent / 100, currFormat)+'</InstdAmt>');
+        amountCheck := amountCheck + amountincent;
+        memo1.lines.Add ('      <DrctDbtTx>');
+        memo1.lines.Add ('        <MndtRltdInf>');
+        sum := sum + amountincent/100;
+        memo1.lines.Add ('          <MndtId>' + exp.internal + '</MndtId>');
+        memo1.lines.Add ('          <DtOfSgntr>' + date + '</DtOfSgntr>');
+        memo1.lines.Add ('          <AmdmntInd>false</AmdmntInd>');
+        memo1.lines.Add ('        </MndtRltdInf>');
+        memo1.lines.Add ('      </DrctDbtTx>');
 
-      inc(txs);
+        inc(txs);
 
-      memo1.lines.Add ('      <DbtrAgt>');
-      memo1.lines.Add ('        <FinInstnId>');
-      memo1.lines.Add ('          <BIC>');
-      memo1.lines.Add ('            '+ba.bic);
-      memo1.lines.Add ('          </BIC>');
-      memo1.lines.Add ('        </FinInstnId>');
-      memo1.lines.Add ('      </DbtrAgt>');
+        memo1.lines.Add ('      <DbtrAgt>');
+        memo1.lines.Add ('        <FinInstnId>');
+        memo1.lines.Add ('          <BIC>' + ba.bic + '</BIC>');
+        memo1.lines.Add ('        </FinInstnId>');
+        memo1.lines.Add ('      </DbtrAgt>');
+        memo1.lines.Add ('      <Dbtr>');
+        memo1.lines.Add ('        <Nm>' + k.firstname + ' ' + k.lastname +'</Nm>');
+        memo1.lines.Add ('      </Dbtr>');
 
-      memo1.lines.Add ('      <DbtrAcct>');
-      memo1.lines.Add ('        <Id>');
-      memo1.lines.Add ('          <IBAN>');
-      memo1.lines.Add ('            '+ba.iban);
-      memo1.lines.Add ('          </IBAN>');
-      memo1.lines.Add ('        </Id>');
-      memo1.lines.Add ('      </DbtrAcct>');
-      memo1.lines.Add ('    </DrctDbtTxInf>');
+        memo1.lines.Add ('      <DbtrAcct>');
+        memo1.lines.Add ('        <Id>');
+        memo1.lines.Add ('          <IBAN>' + ba.iban + '</IBAN>');
+        memo1.lines.Add ('        </Id>');
+        memo1.lines.Add ('      </DbtrAcct>');
+        memo1.lines.Add ('    </DrctDbtTxInf>');
+      end;
     end;
   end;
 
 
+  memo1.lines.Add   ('    </PmtInf>');
   memo1.lines.Add   ('  </CstmrDrctDbtInitn>');
   memo1.lines.Add   ('</Document>');
-  memo1.lines.Insert(8,'      <CtrlSum>'+FormatFloat('0.00', sum)+'</CtrlSum>');
-  memo1.lines.Insert(8,'      <NbOfTxs>'+inttostr(txs)+'</NbOfTxs>');
+
+  if empfDetails then
+  begin
+    memo1.lines.Insert(9,'      <NbOfTxs>'+inttostr(txs)+'</NbOfTxs>');
+    memo1.lines.Insert(25,'      <CtrlSum>' + FormatFloat('0.00', amountCheck / 100,currFormat) + '</CtrlSum>');
+    memo1.lines.Insert(25,'      <NbOfTxs>'+inttostr(txs)+'</NbOfTxs>');
+
+  end
+  else
+  begin
+    memo1.lines.Insert(9,'      <NbOfTxs>'+inttostr(txs)+'</NbOfTxs>');
+    memo1.lines.Insert(15,'      <CtrlSum>' + FormatFloat('0.00', amountCheck / 100,currFormat) + '</CtrlSum>');
+    memo1.lines.Insert(15,'      <NbOfTxs>'+inttostr(txs)+'</NbOfTxs>');
+  end;
 
 
   sd := TSaveDialog.Create(self);

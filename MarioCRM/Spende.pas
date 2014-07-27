@@ -48,6 +48,7 @@ type
     procedure CheckBox2Click(Sender: TObject);
     procedure CheckBox3Click(Sender: TObject);
     procedure CheckBox4Click(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -113,8 +114,9 @@ begin
 end;
 
 procedure TForm4.BitBtn1Click(Sender: TObject);
-var i,left:integer;
-    dt:tdatetime;
+var i, left: integer;
+    dt: tdatetime;
+    pk: int64;
 begin
   i:=parse(MaskEdit1.Text);
   if i = 0 then
@@ -139,21 +141,22 @@ begin
     ShowMessage('Es haben '+inttostr(-left)+' Cent ZUVIEL vergeben!')
   else
   begin
-    if MessageDlg('Sind Sie sicher?',mtConfirmation	,[mbYes,mbCancel],0)= MRyes then
+    if MessageDlg('Sind Sie sicher?', mtConfirmation, [mbYes, mbCancel], 0) = mrYes then
     begin
       dt:=DateTimePicker1.DateTime;
       ReplaceDate(dt,MonthCalendar1.Date);
-      data.insertPayment(personid,0,dt,i,memo2.Text);
+
+      pk := data.insertPayment(0, i, dt, personid, memo2.Text);
       if RadioButton2.Checked then
       begin
         if CheckBox1.Checked then
-          data.insertDonation(data.countPayment(nil),donator1,parse(maskedit2.text), false);
+          data.insertDonation(pk,donator1,parse(maskedit2.text), false);
         if Checkbox2.Checked then
-          data.insertDonation(data.countPayment(nil),donator2,parse(maskedit3.text), false);
+          data.insertDonation(pk,donator2,parse(maskedit3.text), false);
         if Checkbox3.Checked then
-          data.insertDonation(data.countPayment(nil),donator3,parse(maskedit4.text), false);
+          data.insertDonation(pk,donator3,parse(maskedit4.text), false);
         if Checkbox4.Checked then
-          data.insertDonation(data.countPayment(nil),personid,parse(maskedit1.text), false);
+          data.insertDonation(pk,personid,parse(maskedit5.text), false);
       end
       else
       begin
@@ -243,6 +246,11 @@ begin
   MaskEdit5.Enabled := CheckBox4.Checked and RadioButton2.Checked;
   Edit4.Enabled := CheckBox4.Checked and RadioButton2.Checked;
 
+end;
+
+procedure TForm4.BitBtn2Click(Sender: TObject);
+begin
+  ModalResult:=mrCancel;
 end;
 
 end.

@@ -74,7 +74,7 @@ object Form4: TForm4
     Top = 112
     Width = 169
     Height = 154
-    Date = 41794.178551504630000000
+    Date = 41794.816991122690000000
     TabOrder = 2
   end
   object BitBtn1: TBitBtn
@@ -95,6 +95,7 @@ object Form4: TForm4
     Cancel = True
     Caption = 'Abbrechen'
     TabOrder = 4
+    OnClick = BitBtn2Click
   end
   object Memo1: TMemo
     Left = 8

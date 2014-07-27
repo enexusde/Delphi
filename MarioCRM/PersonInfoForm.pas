@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ComCtrls,simv, membershipformunit,DonationAndMembershipForm;
+  Dialogs, StdCtrls, Buttons, ComCtrls,simv, membershipformunit,DonationAndMembershipForm,IBANandBIC;
 
 type
   TPersonInfo = class(TForm)
@@ -179,7 +179,10 @@ begin
       p := ddata.findPersonByPK(d.person);
       t := ddata.findTitleByPK(p.title);
       item.SubItems.Add(t.name + ' ' + p.firstname + ' ' + p.lastname);
-      if d.attested then
+      if ddata.findPaymentByPK(d.payment).description <> '' then
+      begin
+        item.SubItems.Add(ddata.findPaymentByPk(d.payment).description);
+      end else if d.attested then
         item.SubItems.Add('Spende Rückerstattet')
       else
         item.SubItems.Add('Spende');
@@ -200,14 +203,25 @@ begin
 end;
 
 procedure TPersonInfo.BitBtn3Click(Sender: TObject);
-var iban,bic:string;
+var miban,mbic:string;
 begin
-  iban:=InputBox('Neues Bankkonto','Wie lautet die IBAN?','DE00000000000000000000');
-  bic:=InputBox('Neues Bankkonto','Wie lautet die BIC?','DE00000000000000000000');
+  with TIBANandBICForm.Create(self) do
+  begin
+    data := self.ddata;
+    if ShowModal() = mrOk then
+    begin
+      miban := iban;
+      mbic := bic;
+    end
+    else
+    begin
+      exit;
+    end;
+  end;
 
   if MessageDlg('Möchten Sie das Bankkonto hinzufügen (Es wird automatisch bei Einzug ausgewählt)',mtConfirmation,[mbYes,mbCancel],0)=mryes then
   begin
-    ddata.insertBankAccount2Person(ddata.insertBankAccount(iban,bic),person.person);
+    ddata.insertBankAccount2Person(ddata.insertBankAccount(miban,mbic),person.person);
 
   end;
 end;

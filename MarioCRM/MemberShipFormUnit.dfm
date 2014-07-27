@@ -1,9 +1,10 @@
 object MemberShipForm: TMemberShipForm
   Left = 368
   Top = 204
-  Width = 603
-  Height = 494
+  BorderStyle = bsDialog
   Caption = 'Beitrags'#252'bersicht'
+  ClientHeight = 467
+  ClientWidth = 595
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

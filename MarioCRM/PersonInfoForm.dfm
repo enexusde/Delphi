@@ -1,6 +1,6 @@
 object PersonInfo: TPersonInfo
-  Left = 611
-  Top = 273
+  Left = 598
+  Top = 165
   BorderStyle = bsDialog
   Caption = 'Daten '#252'ber'
   ClientHeight = 554

@@ -34,6 +34,7 @@ type
     pid:int64;
     ddata:TDAOsimv;
     procedure ChangeTarif(Sender: TObject);
+    function refreshList(var calculated:boolean): Int64;
   end;
 
 var
@@ -61,6 +62,39 @@ begin
   result := (p.currentYear = CurrentYear) and (p.currentMonth = monthof(now));
 end;
 
+function TMemberShipForm.refreshList(var calculated:boolean):int64;
+var i,j,amount:integer;
+    m:TMembershipMonth;
+    c:TCalculationMonth;
+    mc:TMembershipCalculation;
+    eing:string;
+    sum:int64;
+begin
+  sum:=0;
+  listview1.Clear;
+  for i := 1 to ddata.countMembershipMonth(acceptMM) do
+  begin
+    with listview1.Items.Add do
+    begin
+      m := ddata.getMembershipMonth(i, acceptMM);
+      data:=Pointer(m.membershipMonth);
+      c := ddata.findCalculationMonthByPK(m.memberMonth);
+      Caption := inttostr(c.currentYear) + '-';
+      if c.currentMonth < 10 then
+       caption := caption + '0';
+      caption := caption + inttostr(c.currentMonth);
+      mc := ddata.findMembershipCalculationByPK(m.membershipCalculation);
+      if (c.currentYear = CurrentYear) and (c.currentMonth = MonthOf(now)) then
+        calculated := true;
+      sum := sum - ddata.findMembershipCalculationByPK(m.membershipCalculation).costsInCent;
+
+      for j := 1 to ddata.countPaymentAssociation() do
+        sum := sum + ddata.getPaymentAssociation(j).amountCent;
+    end;
+  end;
+  result := sum;
+end;
+
 procedure TMemberShipForm.FormShow(Sender: TObject);
 var i,j,amount:integer;
     m:TMembershipMonth;
@@ -70,28 +104,8 @@ var i,j,amount:integer;
     calculated:boolean;
     sum:int64;
 begin
-  sum:=0;
-  calculated:=false;
-  for i := 1 to ddata.countMembershipMonth(acceptMM) do
-  begin
-    with listview1.Items.Add do
-    begin
-      m := ddata.getMembershipMonth(i, acceptMM);
-      data:=Pointer(m.membershipMonth);
-      c := ddata.findCalculationMonthByPK(m.membershipMonth);
-      Caption := inttostr(c.currentYear) + '-';
-      if c.currentMonth < 10 then
-       caption := caption + '0';
-      caption := caption + inttostr(c.currentMonth);
-      mc := ddata.findMembershipCalculationByPK(m.membershipCalculation);
-      if (c.currentYear = CurrentYear) and (c.currentMonth = MonthOf(now())) then
-        calculated:=true;
-      sum :=  sum - ddata.findMembershipCalculationByPK(m.membershipCalculation).costsInCent;
-
-      for j := 1 to ddata.countPaymentAssociation() do
-        sum := sum + ddata.getPaymentAssociation(j).amountCent;
-    end;
-  end;
+  calculated := false;
+  sum := refreshList(calculated);
 
   if ddata.countMembershipMonth(acceptMM) = 0 then
   begin
@@ -108,8 +122,11 @@ begin
     case (MessageDlg('Die Abrechnung ist noch nicht vollständig. Wenn die Person noch Mitglied ist möchte ich gerne die Abrechnung beginnen.',mtConfirmation,[mbYes,mbNo,mbCancel],0)) of
       mrYes:
         begin
-          if ddata.countCalculationMonth(currentMonth) = 0 then
+          j := ddata.countCalculationMonth(currentMonth);
+          if j = 0 then
             i := ddata.insertCalculationMonth(CurrentYear,MonthOf(now()))
+          else if j > 1 then
+            MessageDlg('Vorsicht, dieser Monat wurde mehrfach abgerechnet!',mtWarning,[mbOK], 0)
           else
             i := ddata.getCalculationMonth(1, currentMonth).calculationMonth;
           ddata.insertMembershipMonth(pid,i,false,mc.membershipCalculation);
@@ -202,15 +219,15 @@ var costs:int64;
     payed:int64;
 begin
   DefaultDraw:=true;
-  if item.SubItems.Count=0 then
+  if item.SubItems.Count = 0 then
   begin
     payed:=0;
     costs:=0;
     with ddata.findMembershipMonthByPK(int64(item.data)) do
     begin
+      item.Caption := inttostr(ddata.findCalculationMonthByPK(memberMonth).currentMonth) + '-' + inttostr(ddata.findCalculationMonthByPK(memberMonth).currentYear);
       with ddata.findMembershipCalculationByPK(membershipCalculation) do
       begin
-        ShowMessage(name);
         item.SubItems.Add(name);
         item.SubItems.Add(ftos(costsInCent / 100));
         costs:=costs+costsInCent;

@@ -13,6 +13,7 @@ object Form5: TForm5
   Font.Style = []
   OldCreateOrder = False
   Position = poDesktopCenter
+  OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -103,6 +104,7 @@ object Form5: TForm5
     Width = 63
     Height = 21
     TabOrder = 5
+    OnChange = Edit2Change
   end
   object Edit3: TEdit
     Left = 314
@@ -110,6 +112,7 @@ object Form5: TForm5
     Width = 111
     Height = 21
     TabOrder = 6
+    OnChange = Edit3Change
   end
   object RadioButton3: TRadioButton
     Left = 296
