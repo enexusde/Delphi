@@ -204,10 +204,19 @@ end;
 
 procedure TPersonInfo.BitBtn3Click(Sender: TObject);
 var miban,mbic:string;
+    i,j:integer;
 begin
   with TIBANandBICForm.Create(self) do
   begin
     data := self.ddata;
+    for i := 1 to ddata.countBankAccount2Person() do
+    begin
+      if ddata.getBankAccount2Person(i).person = person.person then
+        with ddata.findBankAccountbypk(ddata.getBankAccount2Person(i).bankAccount) do
+        addOld(iban,bic);
+    end;
+
+
     if ShowModal() = mrOk then
     begin
       miban := iban;

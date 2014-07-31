@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Mask, Buttons, simv;
+  Dialogs, StdCtrls, Mask, Buttons, simv, ComCtrls;
 
 type
   TIBANandBICForm = class(TForm)
@@ -14,18 +14,22 @@ type
     Label2: TLabel;
     MaskEdit1: TMaskEdit;
     MaskEdit2: TMaskEdit;
+    Label3: TLabel;
+    accounts: TListView;
     procedure BitBtn1Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
     procedure MaskEdit1Change(Sender: TObject);
     procedure MaskEdit2Change(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
+
     iban,bic:string;
     data:TDAOsimv;
-
+    procedure addOld(iban,bic:string);
   end;
 
 var
@@ -38,6 +42,16 @@ implementation
 procedure TIBANandBICForm.BitBtn1Click(Sender: TObject);
 begin
   ModalResult := mrOk;
+end;
+
+procedure TIBANandBICForm.addOld(iban,bic:string);
+begin
+  with accounts.Items.Add do
+  begin
+    Caption := iban;
+    SubItems.Add(bic);
+  end;
+
 end;
 
 procedure TIBANandBICForm.BitBtn2Click(Sender: TObject);
@@ -58,6 +72,11 @@ end;
 procedure TIBANandBICForm.FormShow(Sender: TObject);
 begin
   MaskEdit1.SetFocus;
+end;
+
+procedure TIBANandBICForm.FormCreate(Sender: TObject);
+begin
+accounts.Clear;
 end;
 
 end.
