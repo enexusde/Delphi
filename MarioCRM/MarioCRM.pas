@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, simv, StdCtrls, ComCtrls, Math, newAddress, changewhataddress,
   Buttons, Spende, PersonInfoForm, DonationAndMembershipForm, PersonFormUnit,findperson,
-  OleCtrls, SHDocVw;
+  OleCtrls, SHDocVw, Menus, QuickbookImport;
 
 type
   TForm1 = class(TForm)
@@ -24,6 +24,12 @@ type
     BitBtn3: TBitBtn;
     SEPA: TBitBtn;
     Memo1: TMemo;
+    MainMenu1: TMainMenu;
+    Datei1: TMenuItem;
+    Importieren1: TMenuItem;
+    N1: TMenuItem;
+    Beenden1: TMenuItem;
+    Von1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Edit1Change(Sender: TObject);
@@ -39,6 +45,8 @@ type
     procedure BitBtn2Click(Sender: TObject);
     procedure BitBtn3Click(Sender: TObject);
     procedure SEPAClick(Sender: TObject);
+    procedure Von1Click(Sender: TObject);
+    procedure Beenden1Click(Sender: TObject);
   private
     { Private declarations }
     function selectedPerson(p:PPerson):boolean;
@@ -619,6 +627,28 @@ begin
     ShowMessage('Export erfolgreich.');
   end;
   sd.Free;
+end;
+
+procedure TForm1.Von1Click(Sender: TObject);
+var od: TOpenDialog;
+begin
+  od := TOpenDialog.create(self);
+  od.Filter := 'QuickBooks';
+  od.DefaultExt := 'QBW';
+  od.Title := 'QuickBooks importieren';
+  if od.Execute then
+  begin
+    if FileExists (od.FileName) then
+    begin
+      if not readQBW(od.filename) then
+        ShowMessage('Datei ist keine Quickbooks-Datei.');
+    end;
+  end;
+end;
+
+procedure TForm1.Beenden1Click(Sender: TObject);
+begin
+  Application.Terminate;
 end;
 
 end.

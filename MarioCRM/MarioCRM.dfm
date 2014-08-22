@@ -1,8 +1,8 @@
 object Form1: TForm1
   Left = 240
-  Top = 192
+  Top = 215
   Width = 951
-  Height = 493
+  Height = 470
   Caption = 
     'MarioCRM Customer Releationship Management - Copyright 2014 by P' +
     'eter Rader'
@@ -543,12 +543,13 @@ object Form1: TForm1
     FFF8000000FFFFFFFFF8000000FFFFFFFFFC000000FFFFFFFFFC000000FFFFFF
     FFFE000001FFFFFFFFFE000001FFFFFFFFFF000003FFFFFFFFFF000007FFFFFF
     FFFF80000FFFFFFFFFFFE0001FFFFFFFFFFFE0001FFFFFFFFFFFE0001FFF}
+  Menu = MainMenu1
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnCreate = FormCreate
   DesignSize = (
     943
-    466)
+    424)
   PixelsPerInch = 96
   TextHeight = 13
   object Label3: TLabel
@@ -578,7 +579,7 @@ object Form1: TForm1
     Left = 8
     Top = 72
     Width = 929
-    Height = 330
+    Height = 288
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <
       item
@@ -616,7 +617,7 @@ object Form1: TForm1
   end
   object Button3: TButton
     Left = 600
-    Top = 416
+    Top = 374
     Width = 97
     Height = 25
     Anchors = [akRight, akBottom]
@@ -626,7 +627,7 @@ object Form1: TForm1
   end
   object Button4: TButton
     Left = 709
-    Top = 416
+    Top = 374
     Width = 108
     Height = 25
     Anchors = [akRight, akBottom]
@@ -637,7 +638,7 @@ object Form1: TForm1
   end
   object BitBtn1: TBitBtn
     Left = 501
-    Top = 416
+    Top = 374
     Width = 91
     Height = 25
     Anchors = [akRight, akBottom]
@@ -684,7 +685,7 @@ object Form1: TForm1
   end
   object Button1: TBitBtn
     Left = 825
-    Top = 416
+    Top = 374
     Width = 113
     Height = 25
     Anchors = [akRight, akBottom]
@@ -731,7 +732,7 @@ object Form1: TForm1
   end
   object BitBtn2: TBitBtn
     Left = 10
-    Top = 413
+    Top = 371
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -742,7 +743,7 @@ object Form1: TForm1
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 447
+    Top = 405
     Width = 943
     Height = 19
     Panels = <
@@ -767,7 +768,7 @@ object Form1: TForm1
   end
   object BitBtn3: TBitBtn
     Left = 400
-    Top = 416
+    Top = 374
     Width = 91
     Height = 25
     Anchors = [akRight, akBottom]
@@ -778,7 +779,7 @@ object Form1: TForm1
   end
   object SEPA: TBitBtn
     Left = 304
-    Top = 416
+    Top = 374
     Width = 89
     Height = 25
     Anchors = [akRight, akBottom]
@@ -796,5 +797,26 @@ object Form1: TForm1
       'Memo1')
     TabOrder = 11
     Visible = False
+  end
+  object MainMenu1: TMainMenu
+    Left = 184
+    Top = 8
+    object Datei1: TMenuItem
+      Caption = '&Datei'
+      object Importieren1: TMenuItem
+        Caption = '&Importieren'
+        object Von1: TMenuItem
+          Caption = 'Von &QuickBooks ...'
+          OnClick = Von1Click
+        end
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object Beenden1: TMenuItem
+        Caption = '&Beenden'
+        OnClick = Beenden1Click
+      end
+    end
   end
 end
