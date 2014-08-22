@@ -1,10 +1,10 @@
 object IBANandBICForm: TIBANandBICForm
-  Left = 762
-  Top = 374
+  Left = 729
+  Top = 192
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Kontoverbindung'
-  ClientHeight = 114
+  ClientHeight = 270
   ClientWidth = 350
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,10 +14,11 @@ object IBANandBICForm: TIBANandBICForm
   Font.Style = []
   OldCreateOrder = False
   Position = poDesktopCenter
+  OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
     350
-    114)
+    270)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -33,6 +34,13 @@ object IBANandBICForm: TIBANandBICForm
     Width = 20
     Height = 13
     Caption = 'BIC:'
+  end
+  object Label3: TLabel
+    Left = 8
+    Top = 120
+    Width = 90
+    Height = 13
+    Caption = 'Alte Verbindungen:'
   end
   object BitBtn1: TBitBtn
     Left = 266
@@ -76,9 +84,9 @@ object IBANandBICForm: TIBANandBICForm
   object MaskEdit2: TMaskEdit
     Left = 8
     Top = 80
-    Width = 137
+    Width = 135
     Height = 28
-    EditMask = '>AAAAAAAAAAA;1;X'
+    EditMask = '>AAAAAAAAAAA;1; '
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -89,5 +97,23 @@ object IBANandBICForm: TIBANandBICForm
     TabOrder = 3
     Text = '           '
     OnChange = MaskEdit2Change
+  end
+  object accounts: TListView
+    Left = 8
+    Top = 136
+    Width = 337
+    Height = 129
+    Columns = <
+      item
+        AutoSize = True
+        Caption = 'IBAN'
+      end
+      item
+        Alignment = taRightJustify
+        AutoSize = True
+        Caption = 'BIC'
+      end>
+    TabOrder = 4
+    ViewStyle = vsReport
   end
 end

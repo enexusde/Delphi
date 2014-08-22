@@ -64,6 +64,11 @@ implementation
 
 uses DateUtils, StrUtils;
 
+function removeAll(s,c:string):string;
+begin
+  result := stringreplace(s,c,'',[rfReplaceAll]);
+end;
+
 {$R *.dfm}
 
 function tform1.selectedPerson(p:PPerson):boolean;
@@ -371,7 +376,9 @@ var date:String;
     comment: boolean;
     ba: TBankAccount;
     currFormat :TFormatSettings;
+    glaubigerid:String;
 begin
+  glaubigerid:='DE';
   empfDetails := false;
   currFormat.DecimalSeparator:='.';
   currFormat.ThousandSeparator:=',';
@@ -448,7 +455,7 @@ begin
 
   memo1.lines.Add   ('    </GrpHdr>');
 
-  
+
   memo1.lines.Add   ('    <PmtInf>');
   memo1.lines.Add   ('      <PmtInfId>' + InputBox('Interne ID','Bitte eine interne ID eingeben.','ID'+date) + '</PmtInfId>');
   //memo1.lines.Add   ('      <PmtMtd>DD</PmtMtd>');
@@ -456,14 +463,19 @@ begin
   memo1.lines.Add   ('      <PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl><LclInstrm><Cd>CORE</Cd></LclInstrm><SeqTp>FRST</SeqTp></PmtTpInf>');
   memo1.lines.Add   ('      <ReqdColltnDt>'+date+'</ReqdColltnDt>');
   memo1.lines.Add   ('      <Cdtr><Nm>' + k.firstname+ ' ' + k.lastname + '</Nm></Cdtr>');
-  memo1.lines.Add   ('      <CdtrAcct><Id><IBAN>' + data.findBankAccountByPK(ba2p.bankAccount).iban + '</IBAN></Id></CdtrAcct>');
+  memo1.lines.Add   ('      <CdtrAcct><Id><IBAN>' + removeall(data.findBankAccountByPK(ba2p.bankAccount).iban,'-') + '</IBAN></Id></CdtrAcct>');
   memo1.lines.Add   ('      <CdtrAgt><FinInstnId><BIC>' + data.findBankAccountByPK(ba2p.bankAccount).bic + '</BIC></FinInstnId></CdtrAgt>');
   memo1.lines.Add   ('      <ChrgBr>SLEV</ChrgBr>');
   memo1.lines.Add   ('      <CdtrSchmeId>');
   memo1.lines.Add   ('        <Id>');
   memo1.lines.Add   ('          <PrvtId>');
   memo1.lines.Add   ('            <Othr>');
-  memo1.lines.Add   ('              <Id>' + data.findBankAccountByPK(ba2p.bankAccount).iban + '</Id>');
+
+  while (pos('ZZZ',glaubigerid) <> 5) and (length(glaubigerid) <> 19) do
+    glaubigerid := InputBox('Die Gläubiger-ID','Bitte geben Sie hier die Gläubiger-Identifikationnummer ein.',glaubigerid);
+
+
+  memo1.lines.Add   ('              <Id>' + glaubigerid + '</Id>');
   memo1.lines.Add   ('              <SchmeNm>');
   memo1.lines.Add   ('              <Prtry>SEPA</Prtry>');
   memo1.lines.Add   ('              </SchmeNm>');
@@ -580,7 +592,7 @@ begin
 
         memo1.lines.Add ('      <DbtrAcct>');
         memo1.lines.Add ('        <Id>');
-        memo1.lines.Add ('          <IBAN>' + ba.iban + '</IBAN>');
+        memo1.lines.Add ('          <IBAN>' + removeAll(ba.iban,'-') + '</IBAN>');
         memo1.lines.Add ('        </Id>');
         memo1.lines.Add ('      </DbtrAcct>');
         memo1.lines.Add ('    </DrctDbtTxInf>');
