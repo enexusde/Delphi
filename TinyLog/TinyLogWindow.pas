@@ -51,15 +51,18 @@ begin
   begin
     dlg := TOpenDialog.Create(self);
     if not dlg.Execute then
-      Application.Terminate;
-    stream := TFileStream.Create(dlg.FileName, fmOpenRead or fmShareDenyRead);
-    tinylogform.Caption := dlg.FileName;
-    dlg.free;
+      Application.Terminate
+    else
+    begin
+      stream := TFileStream.Create(dlg.FileName, fmOpenRead or fmShareDenyRead);
+      tinylogform.Caption := dlg.FileName;
+      dlg.free;
+    end;
   end
   else
   begin
-    stream := TFileStream.Create(paramstr(0), fmOpenRead or fmShareDenyRead);
-    tinylogform.Caption := paramstr(0);
+    stream := TFileStream.Create(paramstr(1), fmOpenRead or fmShareDenyRead);
+    tinylogform.Caption := paramstr(1);
   end;
 
   timer1.Enabled:=true;
